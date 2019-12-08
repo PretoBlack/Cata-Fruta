@@ -4,7 +4,6 @@
         type: Phaser.AUTO, // Seleciona se aguenta Canvas ou WebLG
         width: 400,
         height: 600,
-        id: 'divGame',
         physics:{
             default: 'arcade', //Defini o modo Arcade como a fisica
             arcade:{
@@ -25,7 +24,7 @@
     //variaveis que serão usadas em mais de 1 metodo
     var player, keys, fruits, grounds, spikes;
 
-    //textos
+    //textos que irão mostrar no jogo
     var pontos = 0;
     var textoPontos, fimDoJogo;
 
@@ -44,8 +43,6 @@
     // Cria os elementos do jogo
     function create(){
 
-
-
         //Variavel recebe as informações dos botões do teclado
         keys = this.input.keyboard.createCursorKeys();
         this.add.image(200,300,'floresta'); //Criando o fundo
@@ -55,38 +52,44 @@
         player.body.setCollideWorldBounds(true); //Não permite o personagem passar dos limites do jogo
         player.body.bounce.y = 0; //O corpo quica. Ajuste de 0 a 1
   
+        //mensagem de fim do jogo
         fimDoJogo = this.add.text(40, 300, 'FIM DO JOGO', { font: "50px Arial", fill: "red"});
         fimDoJogo.visible = false;
 
-            fruits = this.physics.add.group({
-                    key: 'fruit',
-                    frame: [0,1,2,3,4,5,6,7],                    
-                    setXY: {x: 16, y: 0, stepX: 52}
-                }); //cria o grupo de frutas    
+        fruits = this.physics.add.group({
+            key: 'fruit',
+            frame: [0,1,2,3,4,5,6,7],
+            setXY: {x: 16, y: 0, stepX: 52}
+        }); //cria o grupo de frutas    
 
+        //criando grupo de espinhos
         spikes = this.physics.add.group();
         this.physics.add.collider(spikes, grounds);
         this.physics.add.collider(player, spikes, dano, null, this);
         
+        //define o quicar das frutas
         fruits.children.iterate(function (child){
-            child.setBounceY(Phaser.Math.FloatBetween(0.4,0.9));
+            child.setBounceY(Phaser.Math.FloatBetween(0.5,0.9));
         });
 
         this.physics.add.collider(fruits, grounds); //colisão do chão com as frutas
         this.physics.add.overlap(player, fruits, collectFruit, null, this); //verifica se houve sobreposição do jogador e das frutas
 
+        //função de coletar as frutas
         function collectFruit(player, fruit)
         {
             fruit.disableBody(true, true);
 
+            //adicionando a pontuação
             pontos += 1;
             textoPontos.setText('Pontos: ' + pontos);
 
-            if (fruits.countActive(true) === 0)
+            if (fruits.countActive(true) === 0)//conta quantas frutas ainda existem
             {
-                fruits.children.iterate(function (child) {
+                fruits.children.iterate(function (child) { //reseta as frutas e inicia elas novamente
                     child.enableBody(true, child.x, 0, true, true);
                 });
+                //criando os espinhos
                 var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
                 var spike = spikes.create(x, 16, 'spike');
                 spike.setBounce(1);
@@ -95,12 +98,13 @@
             }
         }
 
+        //função de quando o personagem é tocado pelo espinho
         function dano (player, spike){
             this.physics.pause();
             player.setTint(0xff0000);
             player.anims.play('turn');
             gameOver = true;
-            fimDoJogo.visible = true;
+            fimDoJogo.visible = true;//mostra o fim do jogo
         }
 
         //marcando a pontuação
@@ -147,6 +151,7 @@
             player.setVelocityY(-300);
         }
 
+        //virifcação para o jogador estar em contato com o chão
         this.physics.add.collider(player,grounds);
     }
 
